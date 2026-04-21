@@ -6,8 +6,7 @@
 
 # Setup example
 ```gdscript
-green_heat = GreenHeat.new()
-add_child(green_heat)
+var green_heat: GreenHeat
 
 green_heat.input_received.connect(func(input: GreenHeatInput):
     match input.type:
@@ -23,10 +22,22 @@ green_heat.input_received.connect(func(input: GreenHeatInput):
             pass # spammy
 )
 
-# theoretically, the process can only be started from the script
+// verbose mode if you even need it
+green_heat._debug = true
+
+// connect from a script
 green_heat.connect_as("channel_name")
 
-# todo: a way to disconnect besides just removing the node
+// enabling the node will connect too
+// on ready (if enabled) as well
+green_heat.channel_name = "channel_name"
+green_heat.enabled = true
+
+// disable disconnects from the server
+green_heat.enabled = false
+
+// freeing also works
+green_heat,free()
 ```
 
 # GreenHeatInput
