@@ -22,21 +22,21 @@ green_heat.input_received.connect(func(input: GreenHeatInput):
             pass # spammy
 )
 
-// verbose mode if you even need it
+# verbose mode if you even need it
 green_heat._debug = true
 
-// connect from a script
+# connect from a script
 green_heat.connect_as("channel_name")
 
-// enabling the node will connect too
-// on ready (if enabled) as well
+# enabling the node will connect too
+# on ready (if enabled) as well
 green_heat.channel_name = "channel_name"
 green_heat.enabled = true
 
-// disable disconnects from the server
+# disable disconnects from the server
 green_heat.enabled = false
 
-// freeing also works
+# freeing also works
 green_heat,free()
 ```
 
