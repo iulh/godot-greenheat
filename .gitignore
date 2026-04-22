@@ -1,0 +1,3 @@
+# godot unnecessary for addon stuff
+*.import
+*.uid
