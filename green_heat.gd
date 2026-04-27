@@ -14,6 +14,11 @@ signal input_received(input: GreenHeatInput) ## an exposed signal for detecting 
 		_enabled = value
 	get():
 		return _enabled && !Engine.is_editor_hint()
+		
+@export var minified_data : bool = true: ## TODO: an informative description
+	set(value):
+		if (enabled): return
+		minified_data = value
 
 @export var channel_name : String = "": ## this is the channel name
 	set(value):
@@ -60,13 +65,20 @@ func _disconnect_from_server():
 		_ws.close()
 
 func _get_ws_url():
-	return "wss://heat.prod.kr/%s" % channel_name
+	var url = "wss://heat.prod.kr/%s" % channel_name
+	if minified_data == true:
+		url += "?minify"
+	return url
 
 func _process(delta: float) -> void:
 	if !enabled:
 		return
 	_ws.poll()
-	while _ws.get_available_packet_count() > 0:
+	var packet_count: int
+	while true:
+		packet_count = _ws.get_available_packet_count()
+		if packet_count <= 0:
+			break
 		var raw = _ws.get_packet().get_string_from_utf8()
 		var packet = JSON.parse_string(raw)
 		if packet == null: continue
