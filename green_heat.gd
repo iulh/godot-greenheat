@@ -20,10 +20,10 @@ signal input_received(input: GreenHeatInput) ## an exposed signal for detecting 
 	get():
 		return _enabled && !Engine.is_editor_hint()
 		
-@export var minified_data : bool = true: ## TODO: an informative description
+@export var minify_data : bool = true: # ask for a reduced packets data
 	set(value):
 		if (enabled): return
-		minified_data = value
+		minify_data = value
 
 var _debug = false
 var _enabled: bool
@@ -67,7 +67,7 @@ func _disconnect_from_server():
 
 func _get_ws_url():
 	var url = "wss://heat.prod.kr/%s" % channel_name
-	if minified_data == true:
+	if minify_data == true:
 		url += "?minify"
 	return url
 
@@ -92,4 +92,5 @@ func _process(delta: float) -> void:
 
 		var input = GreenHeatInput.new()
 		input._packet = packet
+		input.is_minified = minify_data
 		input_received.emit(input)
