@@ -3,6 +3,11 @@ class_name GreenHeat
 
 signal input_received(input: GreenHeatInput) ## an exposed signal for detecting any inputs
 
+@export var channel_name : String = "": ## this is the channel name
+	set(value):
+		if (channel_name.length() != 0 && enabled): return
+		channel_name = value
+
 @export var enabled := false: ## defines if the process should be running
 	set(value):
 		_debug_print("set enabled: %s" % value)
@@ -20,13 +25,9 @@ signal input_received(input: GreenHeatInput) ## an exposed signal for detecting 
 		if (enabled): return
 		minified_data = value
 
-@export var channel_name : String = "": ## this is the channel name
-	set(value):
-		if (channel_name.length() != 0 && enabled): return
-		channel_name = value
-
 var _debug = false
 var _enabled: bool
+var _processed_count: int = 0 # for debug aestethics
 var _ws := WebSocketPeer.new()
 
 func _debug_print(text: String):
@@ -73,15 +74,22 @@ func _get_ws_url():
 func _process(delta: float) -> void:
 	if !enabled:
 		return
+	
 	_ws.poll()
+	_processed_count += 1
+
 	var packet_count: int
 	while true:
 		packet_count = _ws.get_available_packet_count()
 		if packet_count <= 0:
 			break
+
 		var raw = _ws.get_packet().get_string_from_utf8()
+		# _debug_print("%s_%s: %s" % [_processed_count, packet_count, raw]) # spammy
+
 		var packet = JSON.parse_string(raw)
 		if packet == null: continue
+
 		var input = GreenHeatInput.new()
 		input._packet = packet
 		input_received.emit(input)
