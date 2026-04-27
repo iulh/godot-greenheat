@@ -42,7 +42,7 @@ var time -> float: # time when the packet reached GreenHeat server (in milliseco
 		return _packet["time"]
 var latency -> float: # latency based on streamer and chatters internet in milliseconds
 	get():
-		return _packet["latency"]
+		return _packet["latency_ms"]
 var type -> InputType: # type of the input
 	get():
 		return _string_to_type_enum(_packet["type"])
@@ -51,7 +51,7 @@ var id -> String: # id from twitch account or anon
 		return _packet["id"]
 var is_anonymous -> bool: # if the packet from not logged-in device
 	get():
-		return _packet["isAnonymous"]
+		return _packet["is_anonymous"]
 
 func  to_string():
 	return "<GHI:%s_%s>" % [type, id]
