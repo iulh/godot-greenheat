@@ -95,8 +95,8 @@ func _process(_delta: float) -> void:
 	if state == _ws.STATE_CLOSING || state == _ws.STATE_CLOSED:
 		if is_state_changed == true:
 			var code = _ws.get_close_code()
-			var reason = _ws.get_close_reason()
-			_debug_print("%s connection to url %s with code %s, reason \"%s\"" % [_ws_state_to_string(state), _get_ws_url(false), code, reason])
+			# var reason = _ws.get_close_reason() # it's not provided so what the point
+			printerr("%s connection to url %s with code %s" % [_ws_state_to_string(state), _get_ws_url(false), code])
 	elif state == _ws.STATE_CONNECTING: pass
 	elif state == _ws.STATE_OPEN:
 		var packet_count: int # should update
