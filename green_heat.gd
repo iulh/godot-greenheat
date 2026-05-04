@@ -20,7 +20,7 @@ signal input_received(input: GreenHeatInput) ## an exposed signal for detecting 
 	get():
 		return _enabled && !Engine.is_editor_hint()
 		
-@export var minify_data : bool = true: # ask for a reduced packets data
+@export var minify_data: bool = false: # ask for a reduced packets data
 	set(value):
 		if (enabled): return
 		minify_data = value
@@ -91,7 +91,7 @@ func _process(delta: float) -> void:
 			break
 
 		var raw = _ws.get_packet().get_string_from_utf8()
-		_debug_print("%s_%s: %s" % [_processed_count, packet_count, raw]) # spammy
+		# _debug_print("%s_%s: %s" % [_processed_count, packet_count, raw]) # spammy
 
 		var packet = JSON.parse_string(raw)
 		if packet == null: continue
