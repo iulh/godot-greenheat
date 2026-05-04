@@ -25,8 +25,8 @@ func minification(full: String, mini: String, default: Variant):
 	if key.length() <= 0:
 		return default
 
-	var value = _packet[key]
-	if (value == null):
+	var value = _packet.get(key)
+	if (value != null):
 		return value
 
 	return default
@@ -42,16 +42,16 @@ var button: String: # button name from the input (can be minified)
 		return minification("button", "", "left")
 var is_shift_pressed: bool: # if "shift" was pressed while the packet was sent (can be minified)
 	get():
-		return _packet["shift"]
+		return minification("shift", "", false)
 var is_ctrl_pressed: bool: # if "ctrl" was pressed while the packet was sent (can be minified)
 	get():
-		return _packet["ctrl"]
+		return minification("ctrl", "", false)
 var is_alt_pressed: bool: # if "alt" was pressed while the packet was sent (can be minified)
 	get():
-		return _packet["alt"]
+		return minification("alt", "", false)
 var time: float: # time when the packet reached GreenHeat server (in milliseconds???) (can be minified)
 	get():
-		return _packet["time"]
+		return minification("time", "", 0) # todo: return current time might be good?
 var latency: float: # latency based on streamer and chatters internet in milliseconds
 	get():
 		return minification("latency_ms", "latency", 0)
