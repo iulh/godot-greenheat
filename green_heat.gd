@@ -83,8 +83,9 @@ func _get_ws_url(force_generate: bool = true):
 			url += "?minify"
 	return url
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	_ws.poll()
+	_processed_count += 1
 
 	var state = _ws.get_ready_state()
 	var is_state_changed = state != _last_ws_state
@@ -98,7 +99,6 @@ func _process(delta: float) -> void:
 			_debug_print("%s connection to url %s with code %s, reason \"%s\"" % [_ws_state_to_string(state), _get_ws_url(false), code, reason])
 	elif state == _ws.STATE_CONNECTING: pass
 	elif state == _ws.STATE_OPEN:
-		_processed_count += 1
 		var packet_count: int # should update
 		while true:
 			packet_count = _ws.get_available_packet_count()
@@ -106,7 +106,7 @@ func _process(delta: float) -> void:
 				break
 			
 			var raw = _ws.get_packet().get_string_from_utf8()
-			_debug_print("%s_%s | %s" % [_processed_count, packet_count, raw]) # spammy
+			# _debug_print("%s_%s | %s" % [_processed_count, packet_count, raw]) # spammy
 
 			var packet = JSON.parse_string(raw)
 			if packet == null:
@@ -128,4 +128,4 @@ func _ws_state_to_string(state: int):
 		_ws.STATE_CLOSED: return "CLOSED"
 		_ws.STATE_CONNECTING: return "CONNECTING"
 		_ws.STATE_OPEN: return "OPEN"
-		_: "UNKNOWN %s" % state
+		_: return "UNKNOWN %s" % state
