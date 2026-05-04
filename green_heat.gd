@@ -26,9 +26,14 @@ signal input_received(input: GreenHeatInput) ## an exposed signal for detecting 
 		minify_data = value
 
 var _debug = false
-var _enabled: bool
-var _processed_count: int = 0 # for debug aestethics
+var _processed_count: int = 0 # for debug reasons
+var _last_ws_state: int = _ws.STATE_CLOSED # for debug reasons
+
 var _ws := WebSocketPeer.new()
+var _enabled: bool:
+	set(value):
+		_enabled = value
+		set_process(value)
 
 func _debug_print(text: String):
 	if _debug:
@@ -40,7 +45,7 @@ func _ready():
 	connect_as("")
 
 # connect to GreenHeat servers as the channel
-func connect_as(_channel_name: String):
+func connect_as(_channel_name: String = ""):
 	if _channel_name.length() > 0:
 		channel_name = _channel_name
 
@@ -52,51 +57,75 @@ func connect_as(_channel_name: String):
 		printerr("GreenHeat server is connected already")
 		_enabled = false
 
-	var url = _get_ws_url()
+	var url = _get_ws_url(true)
 	_debug_print("connecting to %s.." % url)
 
+	_enabled = true
 	var code = _ws.connect_to_url(url)
 	if code < 0:
 		printerr("error while connecting to %s: %d" % [url, code])
+		_enabled = false
 	else:
-		_debug_print("the server returned %d (??)" % [code])
-
-	_enabled = true
+		_debug_print("GreenHeat server returned code %d" % [code])
 	
 # connect to GreenHeat servers as the channel
 func _disconnect_from_server():
 	if _ws.get_ready_state() != _ws.STATE_CLOSED:
-		var url = _get_ws_url()
+		var url = _get_ws_url(false)
 		_debug_print("hard disconnect from %s" % url)
 		_ws.close()
 
-func _get_ws_url():
-	var url = "wss://heat.prod.kr/%s" % channel_name
-	if minify_data == true:
-		url += "?minify"
+func _get_ws_url(force_generate: bool = true):
+	var url = _ws.get_requested_url()
+	if force_generate == true || url.length() <= 0:
+		url = "wss://heat.prod.kr/%s" % channel_name
+		if minify_data == true:
+			url += "?minify"
 	return url
 
 func _process(delta: float) -> void:
-	if _ws.get_ready_state() != _ws.STATE_CLOSING && !enabled:
-		return
-
 	_ws.poll()
+
+	var state = _ws.get_ready_state()
+	var is_state_changed = state != _last_ws_state
+	if is_state_changed == true:
+		_debug_print("%s | ws state changed from %s to %s" % [_processed_count, _ws_state_to_string(_last_ws_state), _ws_state_to_string(state)])
+
+	if state == _ws.STATE_CLOSING || state == _ws.STATE_CLOSED:
+		if is_state_changed == true:
+			var code = _ws.get_close_code()
+			var reason = _ws.get_close_reason()
+			_debug_print("%s connection to url %s with code %s, reason \"%s\"" % [_ws_state_to_string(state), _get_ws_url(false), code, reason])
+	elif state == _ws.STATE_CONNECTING: pass
+	elif state == _ws.STATE_OPEN:
+		_processed_count += 1
+		var packet_count: int # should update
+		while true:
+			packet_count = _ws.get_available_packet_count()
+			if packet_count <= 0:
+				break
+			
+			var raw = _ws.get_packet().get_string_from_utf8()
+			_debug_print("%s_%s | %s" % [_processed_count, packet_count, raw]) # spammy
+
+			var packet = JSON.parse_string(raw)
+			if packet == null:
+				_debug_print("non-json packet!! %s" % raw) # might be spammy
+
+			var input = GreenHeatInput.new()
+			input._packet = packet
+			input.is_minified = minify_data
+			input_received.emit(input)
+	else:
+		printerr("unhandled websocket state: %s" % state)
+		_enabled = false
+
+	_last_ws_state = state
 		
-	_processed_count += 1
-
-	var packet_count: int
-	while true:
-		packet_count = _ws.get_available_packet_count()
-		if packet_count <= 0:
-			break
-
-		var raw = _ws.get_packet().get_string_from_utf8()
-		# _debug_print("%s_%s: %s" % [_processed_count, packet_count, raw]) # spammy
-
-		var packet = JSON.parse_string(raw)
-		if packet == null: continue
-
-		var input = GreenHeatInput.new()
-		input._packet = packet
-		input.is_minified = minify_data
-		input_received.emit(input)
+func _ws_state_to_string(state: int):
+	match state:
+		_ws.STATE_CLOSING: return "CLOSING"
+		_ws.STATE_CLOSED: return "CLOSED"
+		_ws.STATE_CONNECTING: return "CONNECTING"
+		_ws.STATE_OPEN: return "OPEN"
+		_: "UNKNOWN %s" % state
