@@ -49,12 +49,12 @@ var is_ctrl_pressed: bool: # if "ctrl" was pressed while the packet was sent (ca
 var is_alt_pressed: bool: # if "alt" was pressed while the packet was sent (can be minified)
 	get():
 		return minification("alt", "", false)
-var time: float: # time when the packet reached GreenHeat server (in milliseconds???) (can be minified)
+var time: int: # time when the packet reached GreenHeat server in milliseconds (can be minified)
 	get():
-		return minification("time", "", 0) # todo: return current time might be good?
-var latency: float: # latency based on streamer and chatters internet in milliseconds
+		return minification("time", "", Time.get_unix_time_from_system() * 1000) # todo: never compared it with real data, but it should be fine
+var latency: int: # latency based on streamer and chatters internet in milliseconds
 	get():
-		return minification("latency_ms", "latency", 0)
+		return minification("latency_ms", "latency", 1)
 var type: InputType: # type of the input
 	get():
 		return _string_to_type_enum(_packet["type"])
@@ -65,5 +65,5 @@ var is_anonymous: bool: # if the packet from not logged-in device (can be minifi
 	get():
 		return minification("is_anonymous", "", false)		
 
-func  to_string():
-	return "<GHI:%s_%s>" % [type, id]
+func _to_string():
+	return "<GHI:%s_%s-%s>" % [button, type, id]
