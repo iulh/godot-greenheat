@@ -22,18 +22,27 @@ green_heat.input_received.connect(func(input: GreenHeatInput):
             pass # spammy
 )
 
+
 # verbose mode if you even need it
 green_heat._debug = true
+
+# minified data reduces bandwidth by cutting unnecessary data
+green_heat.minify_data = true
+
 
 # connect from a script
 green_heat.connect_as("channel_name")
 
-# enabling the node will connect too
-# on ready (if enabled) as well
+# or connect this way
+green_heat.channel_name = "channel_name"
+green_heat.connect_as("")
+
+# enabling from the editor will initiate connection too
 green_heat.channel_name = "channel_name"
 green_heat.enabled = true
 
-# disable disconnects from the server
+
+# disabling the node disconnects from the server
 green_heat.enabled = false
 
 # freeing also works
@@ -41,20 +50,20 @@ green_heat,free()
 ```
 
 # GreenHeatInput
-the `GreenHeatInput` matches websocket's packets, to be exact:
-- "mobile" as bool
-- "x" and "y" combined to "position" as Vector2
-- "button" as String
-- renamed "shift" to "is_shift_pressed" as bool
-- renamed "ctrl" to "is_ctrl_pressed" as bool
-- renamed "alt" to "is_alt_pressed" as bool
-- "time" as float
-- "latency" as float
-- "type" as parsed InputType
-  - CLICK (1) on type "click" 
-  - HOVER (2) on type "hover"
-  - DRAG (3) on type "drag"
-  - RELEASE (4) on type "release"
-  - UNKNOWN (0) if no match
-- "id" as String
-- renamed "isAnonymous" to "is_anonymous" as bool
+the `GreenHeatInput` matches websocket's received packets. for a record:
+- variable "mobile" as `bool`
+- values "x" and "y" combined to variable "position" as type `Vector2`
+- variable "button" as type `String`
+- renamed value "shift" to variable "is_shift_pressed" as type `bool`
+- renamed value "ctrl" to variable "is_ctrl_pressed" as type `bool`
+- renamed value "alt" to variable "is_alt_pressed" as type `bool`
+- variable "time" as type `float`
+- variable "latency" as type `float`
+- variable "type" as parsed enum `InputType`
+  - enum `CLICK` (1) on value "click" 
+  - enum `HOVER` (2) on value "hover"
+  - enum `DRAG` (3) on value "drag"
+  - enum `RELEASE` (4) on value "release"
+  - enum `UNKNOWN` (0) if no match
+- variable "id" as type `String`
+- variable "is_anonymous" as type `bool`
