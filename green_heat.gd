@@ -13,7 +13,7 @@ signal input_received(input: GreenHeatInput) ## an exposed signal for detecting 
 		_debug_print("set enabled: %s" % value)
 		if value:
 			if is_node_ready():
-				value = connect_as("")
+				connect_as("")
 		else:
 			_disconnect_from_server()
 		_enabled = value
@@ -37,7 +37,7 @@ func _debug_print(text: String):
 func _ready():
 	if !enabled: return
 	_debug_print("connecting to GreenHeat on ready")
-	_enabled = connect_as("")
+	connect_as("")
 
 # connect to GreenHeat servers as the channel
 func connect_as(_channel_name: String):
@@ -46,17 +46,22 @@ func connect_as(_channel_name: String):
 
 	if channel_name.length() == 0:
 		printerr("can't connect to GreenHeat with an empty channel name")
-		return false
+		_enabled = false
 
 	if _ws.get_ready_state() == WebSocketPeer.STATE_OPEN:
 		printerr("GreenHeat server is connected already")
-		return false
+		_enabled = false
 
 	var url = _get_ws_url()
 	_debug_print("connecting to %s.." % url)
-	_ws.connect_to_url(url)
 
-	return true
+	var code = _ws.connect_to_url(url)
+	if code < 0:
+		printerr("error while connecting to %s: %d" % [url, code])
+	else:
+		_debug_print("the server returned %d (??)" % [code])
+
+	_enabled = true
 	
 # connect to GreenHeat servers as the channel
 func _disconnect_from_server():
@@ -72,10 +77,11 @@ func _get_ws_url():
 	return url
 
 func _process(delta: float) -> void:
-	if !enabled:
+	if _ws.get_ready_state() != _ws.STATE_CLOSING && !enabled:
 		return
-	
+
 	_ws.poll()
+		
 	_processed_count += 1
 
 	var packet_count: int
@@ -85,7 +91,7 @@ func _process(delta: float) -> void:
 			break
 
 		var raw = _ws.get_packet().get_string_from_utf8()
-		# _debug_print("%s_%s: %s" % [_processed_count, packet_count, raw]) # spammy
+		_debug_print("%s_%s: %s" % [_processed_count, packet_count, raw]) # spammy
 
 		var packet = JSON.parse_string(raw)
 		if packet == null: continue
